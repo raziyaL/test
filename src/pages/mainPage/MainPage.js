@@ -1,108 +1,80 @@
 import React, {useState} from 'react';
-import Component from "../../component/Component"
 import {TextField, Button} from "@mui/material";
+import {useForm} from "react-hook-form";
+import {useDispatch, useSelector} from "react-redux";
+import {UserInfo} from "../../store/Slice";
 
 
 function MainPage() {
-
-    const [name, setName] = useState('');
-    const [password, setPassword] = useState('');
-    const [secondPass, setSecondPass] = useState('');
-    const [register, setRegister] = useState(false);
-    const [error, setError] = useState('');
-    const [userInfo, setUserInfo] = useState([]);
-
-    const handleName = (e) => {
-        setName(e.target.value)
-    }
-    const handlePassword = (e) => {
-        setPassword(e.target.value)
-    }
-    const handleSecondPass = (e) => {
-        setSecondPass(e.target.value)
-    }
+const {users} = useSelector((state) => state.users);
+  const [error, setError] = useState('');
 
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+const {
+    register,
+    handleSubmit,
+    formState: {errors},
+    reset
+    } = useForm()
+    const dispatch = useDispatch();
 
-        if (!name || !password || !secondPass) {
-            setError('zapolnite vse polya');
-            return;
-        }
 
-        if (password !== secondPass) {
-            setError('oshibka! paroli ne sovpadayt');
-            return;
-        }
-        // if (register) {
-        //     setError('oshibka! takoi user uje suwestvuet');
-        //     return;
-        // }
-        const newUser={
-            name: name,
-            password: password,
-            secondPass: secondPass
-        }
-        setUserInfo([...userInfo, newUser]);
-        const userExists = userInfo.some(user => user.name === name);
-        if (userExists) {
-            setError('oshibka! takoi user uje suwestvuet');
-            return;
-        }
-        setRegister(true);
-        console.log(name, password);
 
-        setName('');
-        setPassword('');
-        setSecondPass('');
+const handleUserInfo = (data) =>{
+    const register = users.some((user) => user.name === data.name);
+    if(register){
+        setError("oshibka! etot polzovatel' uje suwestvuet")
+    }else if(data.password === data.secondPass){
+        dispatch(UserInfo(data))
+        setError("")
+        reset()
+    }else {
+        setError("Пароли не совпадают");
     }
 
-    return (
-        <div style={{margin:'30px'}}>
-            <form action="" onSubmit={handleSubmit}>
-                <TextField
-                    variant="outlined"
-
-                    style={{marginLeft: '10px'}}
-                    value={name}
-                    type="text"
-                    placeholder="name"
-                    onChange={handleName}
-                />
-
-                <TextField
-                    style={{marginLeft: '10px'}}
-                    variant="outlined"
-
-                    value={password}
-                    type="password"
-                    placeholder="password"
-                    onChange={handlePassword}
-                />
-
-                <TextField
-                    style={{marginLeft: '10px'}}
-                    variant="outlined"
-                    value={secondPass}
-                    type="password"
-                    placeholder="password"
-                    onChange={handleSecondPass}
-                />
+}
 
 
-                <Button type='submit' style={{margin:"10px"}}>register</Button>
-            </form>
 
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+return(
+    <div>
+        <form action="" onSubmit={handleSubmit(handleUserInfo)} style={{display: "flex", width:"700px", margin:"0 auto", justifyContent:"space-between"}}>
            <div>
-               {userInfo.map((user, index) => (
-               <Component key={index} register={user} />
-           ))}
+               <TextField
+                   type="text"
+                   placeholder="name"
+                   {...register("name", {required:true})}/>
+               {errors.name && <p>zapolnite eto pole</p>}
            </div>
 
-        </div>
-    );
+
+           <div>
+               <TextField
+               type="text"
+               placeholder="password"
+               {...register("password", {required:true})}/>
+               {errors.password && <p>zapolnite eto pole</p>}</div>
+
+            <div>
+                <TextField
+
+                    type="text"
+                    placeholder="secondPass"
+                    {...register("secondPass", {required:true})}/>
+                {errors.secondPass && <p>zapolnite eto pole</p>}
+            </div>
+            <Button type="submit" style={{height:"40px", marginTop:"10px"}}>Add</Button>
+        </form>
+        {errors && <p>{error}</p>}
+
+        {users && users.map((user, id)=>(
+            <div key={id} style={{width:'300px', margin:"0 auto", border:"1px solid black", borderRadius:"10px", marginTop:"10px"}} >
+                <p>name:{user.name}</p>
+                <p>password:{user.password}</p>
+            </div>
+        ))}
+    </div>
+)
 }
 
 export default MainPage;
